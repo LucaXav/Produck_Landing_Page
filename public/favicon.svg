@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#7DA46A"/>
+  <!-- Duck silhouette — adapted from Friendly Mascot at favicon scale -->
+  <path d="M 19 6
+           C 23 6, 25 9, 25 12.5
+           C 25 14.5, 24 16.5, 23 17.5
+           C 23.5 18, 23.5 19, 23 19.5
+           C 23.5 20.5, 24 22, 23.5 24
+           C 23 26.5, 20 28, 17 28
+           C 12.5 27.5, 10 25.5, 10 22
+           C 10 19, 11.5 17, 13.5 16
+           C 14.5 15.5, 15.5 14.5, 16 13.5
+           C 16 9.5, 16 6.5, 19 6 Z" fill="#F3EFE6"/>
+  <path d="M 23 17.5 L 30 18.5 L 23 19.5 Z" fill="#F89A33"/>
+  <circle cx="20.5" cy="10.5" r="1.1" fill="#0f0f0f"/>
+</svg>

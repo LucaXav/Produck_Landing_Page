@@ -1,0 +1,56 @@
+:root {
+  /* ============== PALETTE ==============
+     Retro-cream OS aesthetic — warm paper-bg, hard black borders,
+     orange brand accent, traffic-light dots on dialog chrome. */
+
+  /* Surfaces */
+  --paper:        #FFFFFF;     /* clean white — dialog interior, form input */
+  --paper-deep:   #F4E9CF;     /* warm cream — page background */
+  --paper-line:   #D4C9AC;     /* warm border on cream */
+  --paving:       #C2BFB1;
+
+  /* Brand accents */
+  --ink:          #0E0E0E;     /* near-black for text + borders */
+  --ink-soft:     #2A2622;
+  --orange:       #FF7A1A;     /* brand orange */
+  --orange-deep:  #E85D00;     /* hover / accent text */
+  --orange-soft:  #F89A33;
+
+  /* Functional */
+  --banner:       #E3B442;
+  --tulip:        #C7464A;
+  --ok:           #2BAC76;     /* success state — form submit + status text */
+  --traffic-red:    #FF5F57;
+  --traffic-yellow: #FEBC2E;
+  --traffic-green:  #28C840;
+
+  /* Shadows */
+  --shadow-sm:    0 2px 0 rgba(15,15,15,0.10);
+  --shadow-md:    0 4px 0 rgba(15,15,15,0.18);
+  --shadow-lg:    0 8px 0 rgba(15,15,15,0.22);
+
+  /* Border thickness — central control so we can fatten/slim consistently */
+  --bw:           2.5px;
+
+  /* Greens kept around for the duck scene fallback */
+  --grass:        #7DA46A;
+  --grass-dark:   #5E7B4F;
+  --grass-light:  #A8C18E;
+  --hedge:        #4A7042;
+
+  /* ============== TYPE ============== */
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-pixel:   "Pixelify Sans", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans:    "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ============== SIZE TOKENS ============== */
+  --pad-x:        clamp(20px, 4vw, 56px);
+  --pad-x-mobile: 20px;
+  --topnav-h:     64px;
+  --status-h:     0px;        /* Status pip was removed; var kept at 0 so the
+                                 existing top-offset math in layout/components
+                                 still resolves without rewriting every rule. */
+  --radius:       10px;
+  --radius-pill:  999px;
+}

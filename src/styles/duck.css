@@ -1,0 +1,146 @@
+/* ============== DUCK CONTAINER ============== */
+.duck {
+  position: fixed;
+  top: 0; left: 0;
+  /* Video sprite is 1200×1500 (portrait, aspect 0.80). Container matches the
+     new wider crop so the entire duck — beak to tail-tip — stays in frame. */
+  width: 80px;
+  height: 100px;
+  /* z-index 120 → ABOVE the topnav (z:100) and whiteboard (z:115), so the
+     duck can dock over the header bar and never gets covered. Status pip
+     (z:130) is the only thing kept on top. */
+  z-index: 120;
+  /* JS sets transform: translate(x, y) translate(-50%, -50%) scaleX(±1) */
+  transform: translate(50vw, 50vh) translate(-50%, -50%);
+  transition: filter 0.2s;
+  will-change: transform;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+}
+@media (max-width: 720px) {
+  .duck { width: 60px; height: 75px; }
+  /* Mobile: duck is purely decorative — no tap-to-grab, no whiteboard
+     activation. This prevents the canvas from intercepting touch and
+     blocking page scroll. The pen tool is not usable on touch anyway. */
+  .duck         { pointer-events: none !important; cursor: default !important; }
+  .whiteboard,
+  .whiteboard.active { pointer-events: none !important; }
+}
+.duck svg {
+  width: 100%; height: 100%;
+  /* Hard pixel-edge upscaling for the GameBoy-era sprite look */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  /* Pixel-style drop shadow — single offset, no blur */
+  filter: drop-shadow(0 3px 0 rgba(15,15,15,0.18));
+}
+
+/* Video sprite — source faces left, flip horizontally so the natural
+   forward direction is RIGHT (which matches JS's facing convention: the
+   duck always walks in the direction it's facing, leaving footprints
+   behind it). Duck.js pauses this video on grab so the duck holds still
+   while you draw, and resumes it on release. */
+.duck-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transform: scaleX(-1);
+  pointer-events: none;       /* click-to-grab targets the .duck container */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 4px 0 rgba(15,15,15,0.18));
+}
+
+/* ============== WALK CYCLE ==============
+   Leg rotations + body bob are driven from JS based on actual distance
+   traveled (see duck.js → _applyWalkPose). The CSS only sets the pivots
+   so we don't recompute them every tick.
+   No @keyframes here — that's what made the legs swing on a fixed timer. */
+.duck-leg-front,
+.duck-leg-back,
+.duck-body {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+  will-change: transform;
+}
+/* Body bobs vertically — pivot at the body's own bottom-center */
+.duck-body { transform-origin: 50% 100%; }
+
+/* Grabbed → legs hang straight, body still */
+.duck.state-grabbed .duck-leg-front,
+.duck.state-grabbed .duck-leg-back {
+  transform: rotate(0deg) !important;
+}
+.duck.state-grabbed .duck-body {
+  transform: translateY(0) !important;
+}
+
+/* ============== STATE EFFECTS ============== */
+/* When grabbed: hide cursor (duck IS the cursor) AND stop capturing pointer
+   events so the whiteboard canvas underneath receives mousedown for drawing. */
+.duck.state-grabbed {
+  cursor: none;
+  z-index: 125;
+  pointer-events: none;
+}
+
+/* Hide the OS cursor across the entire page while the duck is grabbed —
+   the duck (with pen) IS the cursor. JS toggles `html.duck-grabbed` on the
+   root in duck.js. Includes the whiteboard so the default crosshair while
+   drawing doesn't sneak through. Inputs / safe zones release the duck
+   before the cursor is needed there. */
+html.duck-grabbed,
+html.duck-grabbed body,
+html.duck-grabbed *  { cursor: none !important; }
+
+/* ============== FOOTPRINTS ============== */
+.footprint {
+  position: absolute;
+  width: 18px;
+  height: 20px;
+  pointer-events: none;
+  will-change: opacity, transform;
+  /* Footprints are pixel art too — keep them crisp at any zoom */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+.footprint svg { width: 100%; height: 100%; }
+
+/* ============== DRAW MODE HINT BANNER ============== */
+.draw-hint {
+  position: fixed;
+  top: calc(var(--status-h) + var(--topnav-h) + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  z-index: 122;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+}
+.draw-hint.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.draw-hint kbd {
+  background: rgba(255,255,255,0.18);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin: 0 2px;
+}
+

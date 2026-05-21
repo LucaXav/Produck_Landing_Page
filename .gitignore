@@ -1,0 +1,19 @@
+node_modules
+dist
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.log
+.vite
+
+# Versioned dev screenshots — kept locally, not in the repo
+screenshot-v*.png
+screenshot-walk-*.png
+screenshot-desktop*.png
+screenshot-mobile.png
+
+# Intermediate frames produced by scripts/convert-duck-*.{mjs,py}
+scripts/duck-frame-*.png
+scripts/duck-pen-frame*.png
+scripts/.frames/

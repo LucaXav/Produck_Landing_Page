@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en" class="is-reloading">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#7DA46A" />
+  <title>Produck · Don't release your product without it</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/styles/reset.css" />
+  <link rel="stylesheet" href="/src/styles/tokens.css" />
+  <link rel="stylesheet" href="/src/styles/layout.css" />
+  <link rel="stylesheet" href="/src/styles/components.css" />
+  <link rel="stylesheet" href="/src/styles/duck.css" />
+</head>
+<body>
+  <!-- ============== DESKTOP BG (cream + dot grid) ============== -->
+  <div class="scene" id="scene" aria-hidden="true"></div>
+
+  <!-- ============== TOP NAV ============== -->
+  <header class="topnav" id="topnav">
+    <a class="topnav-brand" href="/" aria-label="Produck home">
+      <img class="topnav-brand-icon" src="/duck-logo.png" alt="" />
+      <span class="topnav-brand-name">PRODUCK</span>
+    </a>
+    <div class="topnav-spacer"></div>
+    <button class="topnav-btn" id="release-duck-btn" hidden>Release the duck</button>
+    <button class="topnav-btn" id="clear-canvas-btn" hidden>Clear drawing</button>
+    <button class="topnav-cta" data-action="focus-email">Get the extension</button>
+  </header>
+
+  <!-- ============== HERO DIALOG ============== -->
+  <main class="hero" id="hero">
+    <section class="dialog" id="dialog" role="dialog" aria-labelledby="dialog-title">
+      <header class="dialog-titlebar" id="dialog-titlebar" title="Drag me">
+        <div class="dialog-lights" aria-hidden="true">
+          <span class="dialog-light dialog-light--close"></span>
+          <span class="dialog-light dialog-light--min"></span>
+          <span class="dialog-light dialog-light--max"></span>
+        </div>
+        <span class="dialog-title" id="dialog-title">produck.exe &mdash; beta access</span>
+      </header>
+
+      <div class="dialog-body">
+        <h1 class="headline">
+          Don&rsquo;t release your product without <em>Produck</em>.
+        </h1>
+        <form class="email-form" id="email-form" novalidate>
+          <label class="visually-hidden" for="email-input">Your email</label>
+          <input
+            id="email-input"
+            type="email"
+            name="email"
+            placeholder="you@company.com"
+            autocomplete="email"
+            required
+          />
+          <button type="submit" class="btn-primary" id="email-submit">
+            Get the duck
+            <svg class="btn-arrow" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M2 8 H14 M9 3 L14 8 L9 13" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </button>
+        </form>
+        <p class="form-status" id="form-status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============== STICKY-NOTE POPUP (top-left, click to dismiss) ============== -->
+  <button class="sticky-note" id="sticky-note" type="button"
+          aria-label="Dismiss version note">
+    <img src="/sticky-v01.png" alt="v0.1 — hatching" />
+  </button>
+
+  <!-- ============== FEEDBACK.LOG TAB (top-right, auto-cycling chat-log) ============== -->
+  <aside class="feedback-log" id="feedback-log" aria-label="Recent user feedback">
+    <header class="feedback-log-titlebar">
+      <div class="feedback-log-lights">
+        <button class="feedback-log-light feedback-log-light--close"
+                id="feedback-log-close" type="button" aria-label="Close feedback log">
+          <span aria-hidden="true">×</span>
+        </button>
+        <span class="feedback-log-light feedback-log-light--min"></span>
+        <span class="feedback-log-light feedback-log-light--max"></span>
+      </div>
+      <span class="feedback-log-title">feedback.log</span>
+    </header>
+    <div class="feedback-log-body">
+      <ol class="feedback-log-list" id="feedback-log-list" aria-live="polite"></ol>
+    </div>
+  </aside>
+
+  <!-- ============== DUCK + FOOTPRINTS + WHITEBOARD ============== -->
+  <!-- Whiteboard canvas — sits above scene, below duck, captures pointer when grabbed -->
+  <canvas class="whiteboard" id="whiteboard"></canvas>
+
+  <!-- Footprint trail — separate layer so duck doesn't render over its own prints -->
+  <div class="footprints" id="footprints" aria-hidden="true"></div>
+
+  <!-- The duck itself — pure SVG, transformed in JS -->
+  <div class="duck" id="duck" aria-hidden="true">
+    <!-- duck SVG injected by JS to keep markup clean -->
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

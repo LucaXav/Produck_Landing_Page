@@ -520,7 +520,12 @@
   background: var(--paper);
   border: var(--bw) solid var(--ink);
   border-radius: 4px;
-  width: clamp(440px, 56vw, 640px);
+  /* Width target stays ~48vw with a 560px cap, but is hard-clamped by a
+     "safe centered zone" — viewport minus 360px on each side — so the
+     centered dialog never collides with the sticky-note (left) or the
+     feedback.log (right) on narrower desktops. The previous 640 cap
+     overlapped the feedback.log below ~1440vw. */
+  width: min(clamp(440px, 48vw, 560px), calc(100vw - 720px));
   max-width: calc(100vw - 40px);
   overflow: hidden;
   /* Hard pixel offset (keeps the retro feel) + soft ambient shadow underneath

@@ -82,22 +82,26 @@
 }
 
 /* ============== STATE EFFECTS ============== */
-/* When grabbed: hide cursor (duck IS the cursor) AND stop capturing pointer
-   events so the whiteboard canvas underneath receives mousedown for drawing. */
+/* When grabbed: the walking duck sprite VANISHES and a duck-with-pencil
+   pixel-art cursor takes over (via the `html.duck-grabbed` rule below).
+   Pointer events drop so the whiteboard canvas underneath receives
+   mousedown for drawing. */
 .duck.state-grabbed {
-  cursor: none;
   z-index: 125;
   pointer-events: none;
 }
+.duck.state-grabbed .duck-video { display: none; }
 
-/* Hide the OS cursor across the entire page while the duck is grabbed —
-   the duck (with pen) IS the cursor. JS toggles `html.duck-grabbed` on the
-   root in duck.js. Includes the whiteboard so the default crosshair while
-   drawing doesn't sneak through. Inputs / safe zones release the duck
-   before the cursor is needed there. */
+/* Across the entire page while grabbed, swap the OS cursor for the
+   pixel-art duck-with-pencil sprite. Hotspot "6 56" lands on the wooden
+   pencil tip in the 67x61 PNG, so the click/draw point is exactly the
+   pencil's writing end — users see strokes emerge from the pencil. JS
+   toggles `html.duck-grabbed` on the root in duck.js. */
 html.duck-grabbed,
 html.duck-grabbed body,
-html.duck-grabbed *  { cursor: none !important; }
+html.duck-grabbed * {
+  cursor: url('/duck-pencil-cursor.png') 6 56, crosshair !important;
+}
 
 /* ============== FOOTPRINTS ============== */
 .footprint {

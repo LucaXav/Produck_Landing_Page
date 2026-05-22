@@ -47,7 +47,7 @@
   /* ============== SIZE TOKENS ============== */
   --pad-x:        clamp(20px, 4vw, 56px);
   --pad-x-mobile: 20px;
-  --topnav-h:     64px;
+  --topnav-h:     58px;
   --status-h:     0px;        /* Status pip was removed; var kept at 0 so the
                                  existing top-offset math in layout/components
                                  still resolves without rewriting every rule. */

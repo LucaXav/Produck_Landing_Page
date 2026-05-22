@@ -9,6 +9,20 @@ body {
   position: relative;
 }
 
+/* Desktop "90% zoom" feel — applied per-element instead of `body { zoom }`
+   because body-level zoom de-syncs every JS-driven pixel coord (whiteboard
+   canvas, duck position, footprints), making the pen tool draw at
+   cursor × 0.9 instead of at the cursor and at the duck's pen tip. Scaling
+   only the static chrome panels — dialog, sticky-note, feedback-log — keeps
+   the duck/whiteboard interactions exact while still shrinking the visible
+   UI by 10%. Topnav size is reduced separately via tokens + font tweaks
+   (it's full-width so element-zoom would leave a gap on the right). */
+@media (min-width: 721px) {
+  #dialog,
+  #sticky-note,
+  #feedback-log { zoom: 0.9; }
+}
+
 /* Cream desktop background — dense retro halftone matching the reference.
    Bigger, more opaque, warmer dots at tight grid spacing read like
    actual printed-paper texture instead of subtle graph paper. */
@@ -77,9 +91,10 @@ body {
     align-items: flex-start;
     padding-left:  var(--pad-x-mobile);
     padding-right: var(--pad-x-mobile);
-    /* Top padding clears the topnav and the sticky-note strip (~96px),
-       leaving a small breathing strip for the duck to waddle through. */
-    padding-top:    calc(var(--topnav-h) + var(--status-h) + 96px);
+    /* Top padding clears the topnav and the sticky-note strip and adds extra
+       breathing room so the dialog sits more vertically centered on mobile
+       rather than hugging the top of the viewport. */
+    padding-top:    calc(var(--topnav-h) + var(--status-h) + 144px);
     padding-bottom: 16px;
   }
 

@@ -17,6 +17,22 @@
   <link rel="stylesheet" href="/src/styles/duck.css" />
 </head>
 <body>
+  <!-- ============== BOOT SCREEN (90s/early-2000s OS boot sequence) ==============
+       Plays on every reload. PRODUCK wordmark blooms in, BIOS-style boot lines
+       type in with orange OK flashes, READY_ shows with a blinking cursor block.
+       Around 1.4s the screen does a CRT shutdown — revealing the desktop with the
+       dialog/feedback.log/sticky-note already mid-glitch underneath. -->
+  <div class="boot-screen" id="boot-screen" aria-hidden="true">
+    <div class="boot-screen-inner">
+      <h2 class="boot-wordmark">PRODUCK</h2>
+      <div class="boot-lines">
+        <span class="boot-line">&gt; memory check ......... <span class="boot-ok">OK</span></span>
+        <span class="boot-line">&gt; loading duck.exe ..... <span class="boot-ok">OK</span></span>
+        <span class="boot-line">&gt; READY_<span class="boot-cursor" aria-hidden="true"></span></span>
+      </div>
+    </div>
+  </div>
+
   <!-- ============== DESKTOP BG (cream + dot grid) ============== -->
   <div class="scene" id="scene" aria-hidden="true"></div>
 

@@ -15,9 +15,11 @@
  * already nulls every reload animation in that mode.
  */
 
-// Longest tab (sticky-note) finishes at 0.34s delay + 0.78s anim = 1.12s.
-// Give an extra beat so the class is gone before any post-burst styles tick.
-const BURST_TOTAL_MS = 1180;
+// Burst budget: boot screen plays 0–1.40s and CRT-shuts-down 1.40–1.95s.
+// Dialog/feedback/sticky glitches now run with +0.9s delays so they finish
+// at 1.62 / 1.82 / 2.02s — sticky is the last to settle. Give an extra
+// 100ms beat so the class is gone before any post-burst styles tick.
+const BURST_TOTAL_MS = 2120;
 
 export function mountReloadGlitch() {
   const root = document.documentElement;

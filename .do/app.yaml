@@ -1,0 +1,69 @@
+# =============================================================================
+# Digital Ocean App Platform — static site blueprint
+# Produck landing page (Vite → static bundle → /dist)
+#
+# Deploy flow:
+#   1. Push to `main` on GitHub.
+#   2. DO App Platform sees the webhook, runs `npm ci && npm run build`.
+#   3. Vite writes a fully static HTML/CSS/JS bundle into `/dist`.
+#   4. DO serves `/dist` from its global CDN. No server runtime.
+#
+# Spec apply options (you normally don't need any of these — GitHub push
+# triggers a deploy automatically once the app is created):
+#   doctl apps create --spec .do/app.yaml         # first-time create
+#   doctl apps update <app-id> --spec .do/app.yaml # later spec tweaks
+#   UI: Apps → Create App → "Import App Spec" → paste this file
+# =============================================================================
+
+name: produck-landing
+region: sgp
+
+static_sites:
+  - name: landing
+    source_dir: /
+
+    # Install deps from lockfile (fails fast on drift) then run Vite build
+    # (writes /dist).
+    build_command: "npm ci --no-audit --no-fund && npm run build"
+    output_dir: /dist
+
+    index_document: index.html
+    # Single-page landing site — no dedicated 404.html in the Vite bundle,
+    # so fall back to index.html for any unknown path.
+    error_document: index.html
+
+    # GitHub-driven deploys: every push to main triggers a fresh build + ship.
+    github:
+      repo: LucaXav/Produck_Landing_Page
+      branch: main
+      deploy_on_push: true
+
+    # -------------------------------------------------------------------------
+    # Environment variables
+    # -------------------------------------------------------------------------
+    # The Supabase keys (VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY) are
+    # intentionally NOT declared in this spec. They live in the DO App
+    # Platform dashboard already (App → Settings → App-Level Environment
+    # Variables) with scope = BUILD_TIME and type = SECRET (encrypted at rest).
+    #
+    # Why not in this file:
+    #   - `type: SECRET` requires a `value`, so committing them here would
+    #     mean either committing secrets or pinning placeholder values that
+    #     would clobber the real ones on `doctl apps update`.
+    #   - Keeping them dashboard-only means rotating the anon key is a
+    #     one-click change with no commit + redeploy cycle.
+    #
+    # The build needs them inlined into the static bundle (VITE_ prefix → Vite
+    # inlines into client JS via import.meta.env), which is why scope must be
+    # BUILD_TIME. If they're missing at build time, `src/lib/supabase.js` logs
+    # a warning and signup capture is disabled — the rest of the site still
+    # works.
+    # -------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Custom domain (optional — uncomment + edit when ready)
+# -----------------------------------------------------------------------------
+# domains:
+#   - domain: produck.so
+#     type: PRIMARY
+#     zone: produck.so

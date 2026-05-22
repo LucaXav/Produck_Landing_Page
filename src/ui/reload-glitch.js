@@ -15,11 +15,13 @@
  * already nulls every reload animation in that mode.
  */
 
-// Burst budget: boot screen plays 0–1.40s and CRT-shuts-down 1.40–1.95s.
-// Dialog/feedback/sticky glitches now run with +0.9s delays so they finish
-// at 1.62 / 1.82 / 2.02s — sticky is the last to settle. Give an extra
-// 100ms beat so the class is gone before any post-burst styles tick.
-const BURST_TOTAL_MS = 2120;
+// Burst budget: boot screen plays 0–1.30s, then its 80s-arcade CRT shutdown
+// runs 1.30–2.25s (pre-flicker → invert → vertical collapse → glowing slit
+// → pixel dot → poof). Dialog/feedback/sticky glitches still run with +0.9s
+// delays so they finish at 1.62 / 1.82 / 2.02s — settled by the time the
+// boot screen reaches its slit phase. Extra 150ms beat after the latest
+// finisher (boot at 2.25s) before the class drops.
+const BURST_TOTAL_MS = 2400;
 
 export function mountReloadGlitch() {
   const root = document.documentElement;

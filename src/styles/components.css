@@ -116,128 +116,6 @@
   .sticky-note { animation: none !important; }
 }
 
-/* ============== BOOT SCREEN ==============
-   Calm 90s terminal. White paper with tiny soft-gray dots, PRODUCK appears,
-   each line types in character-by-character in plain black mono, orange OK
-   marks confirm the step, READY_ lands with a blinking orange cursor. At
-   ~1.5s the whole boot screen fades cleanly out and the desktop opens. No
-   chromatic split, no inversion, no glitch — just typewriting and a fade. */
-.boot-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background-color: #FFFFFF;
-  background-image:
-    radial-gradient(circle, rgba(15,15,15,0.13) 1px, transparent 1.4px);
-  background-size: 6px 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  pointer-events: none;
-  animation: boot-screen-out 0.45s 1.55s ease-out forwards;
-}
-
-.boot-screen-inner {
-  width: min(640px, 100%);
-  display: flex;
-  flex-direction: column;
-  /* Center wordmark + lines block — the lines block has intrinsic mono
-     width so it sits centered horizontally under PRODUCK. */
-  align-items: center;
-  gap: 22px;
-}
-
-.boot-wordmark {
-  font-family: var(--font-pixel);
-  font-weight: 700;
-  font-size: clamp(56px, 12vw, 132px);
-  letter-spacing: 0.02em;
-  color: var(--ink);
-  line-height: 1;
-  margin: 0;
-  opacity: 0;
-  animation: boot-wordmark-in 0.32s 0.05s ease-out forwards;
-}
-
-@keyframes boot-wordmark-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.boot-lines {
-  font-family: var(--font-mono);
-  font-size: clamp(15px, 1.7vw, 22px);
-  font-weight: 600;
-  line-height: 1.6;
-  color: var(--ink);
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.boot-line {
-  display: block;
-  white-space: pre;
-}
-
-/* Each line's main text reveals one character at a time — a literal
-   typewriter using steps(N) on a width animation. ch unit = width of "0"
-   in monospace, which is the width of every character, so width: Nch
-   reveals exactly N characters. */
-.boot-typed {
-  display: inline-block;
-  overflow: hidden;
-  white-space: pre;
-  vertical-align: bottom;
-  width: 0;
-}
-.boot-line:nth-child(1) .boot-typed { animation: boot-type-25 0.40s 0.40s steps(25, end) forwards; }
-.boot-line:nth-child(2) .boot-typed { animation: boot-type-25 0.40s 0.92s steps(25, end) forwards; }
-.boot-line:nth-child(3) .boot-typed { animation: boot-type-8  0.16s 1.40s steps(8, end)  forwards; }
-
-@keyframes boot-type-25 { to { width: 25ch; } }
-@keyframes boot-type-8  { to { width: 8ch;  } }
-
-/* OK marks: fade in cleanly the moment the line finishes typing. */
-.boot-ok {
-  color: var(--orange);
-  font-weight: 700;
-  opacity: 0;
-}
-.boot-line:nth-child(1) .boot-ok { animation: boot-fade-in 0.14s 0.82s ease-out forwards; }
-.boot-line:nth-child(2) .boot-ok { animation: boot-fade-in 0.14s 1.34s ease-out forwards; }
-
-@keyframes boot-fade-in { to { opacity: 1; } }
-
-/* Blinking orange cursor block parked at READY_. Stays invisible until
-   the READY_ line finishes typing, then blinks steadily. */
-.boot-cursor {
-  display: inline-block;
-  vertical-align: -2px;
-  width: 0.55em;
-  height: 1em;
-  background: var(--orange);
-  margin-left: 4px;
-  opacity: 0;
-  animation: boot-cursor-blink 0.6s 1.58s steps(1, end) infinite;
-}
-
-@keyframes boot-cursor-blink {
-  0%, 49%   { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-
-/* Clean fade-out. No transforms, no filters — just the screen going away. */
-@keyframes boot-screen-out {
-  0%   { opacity: 1; }
-  100% { opacity: 0; visibility: hidden; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .boot-screen { display: none !important; }
-}
 /* ============== STICKY-NOTE POPUP ==============
    Retro "v0.1 — hatching" sticky pinned to the left side. Enters on page
    load with a tossed-in bounce, idles with a subtle continuous sway, and
@@ -257,14 +135,11 @@
   filter: drop-shadow(3px 4px 0 rgba(15,15,15,0.20));
   transform-origin: 50% 8%;           /* pivot at the thumbtack so wiggle feels pinned */
   /* CRT-turn-on glitch + landing flash, then idle wiggle. `steps(11, end)`
-     keeps the bloom feeling pixel-snapped rather than smooth. Delays bumped
-     +0.9s so the glitch plays while the BOOT SCREEN is doing its CRT
-     shutdown — the user sees the sticky materialize through the fading
-     boot overlay instead of after it. */
+     keeps the bloom feeling pixel-snapped rather than smooth. */
   animation:
-    glitch-in-sticky 0.78s 1.24s steps(11, end) both,
-    glitch-flash 0.55s 1.24s ease-out forwards,
-    sticky-wiggle 5s ease-in-out 2.05s infinite;
+    glitch-in-sticky 0.78s 0.34s steps(11, end) both,
+    glitch-flash 0.55s 0.34s ease-out forwards,
+    sticky-wiggle 5s ease-in-out 1.15s infinite;
   transition: filter 0.2s;
 }
 .sticky-note img {
@@ -343,11 +218,10 @@
   background: transparent;
   filter: drop-shadow(4px 5px 0 rgba(15,15,15,0.22));
   transform-origin: 85% 50%;
-  /* CRT-turn-on glitch + landing flash, staggered after the dialog.
-     Delay bumped +0.9s to overlap with the BOOT SCREEN's CRT shutdown. */
+  /* CRT-turn-on glitch + landing flash, staggered after the dialog */
   animation:
-    glitch-in-feedback 0.74s 1.08s steps(11, end) both,
-    glitch-flash 0.55s 1.08s ease-out forwards;
+    glitch-in-feedback 0.74s 0.18s steps(11, end) both,
+    glitch-flash 0.55s 0.18s ease-out forwards;
   user-select: none;
 }
 .feedback-log.is-closing {
@@ -675,12 +549,10 @@
     0 24px 36px -12px rgba(15,15,15,0.32),
     0 6px 14px -4px rgba(15,15,15,0.18);
   transition: box-shadow 0.18s, transform 0.18s;
-  /* CRT-turn-on glitch + landing flash on every reload — see RELOAD GLITCH.
-     Delay 0.9s so the dialog materializes while the BOOT SCREEN is doing
-     its CRT shutdown (1.40–1.95s), giving the overlap the user wanted. */
+  /* CRT-turn-on glitch + landing flash on every reload — see RELOAD GLITCH. */
   animation:
-    glitch-in-dialog 0.72s 0.90s steps(11, end) both,
-    glitch-flash 0.55s 0.90s ease-out forwards;
+    glitch-in-dialog 0.72s steps(11, end) both,
+    glitch-flash 0.55s 0s ease-out forwards;
 }
 .dialog:hover {
   transform: translateY(-1px);

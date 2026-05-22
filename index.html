@@ -17,28 +17,6 @@
   <link rel="stylesheet" href="/src/styles/duck.css" />
 </head>
 <body>
-  <!-- ============== BOOT SCREEN (90s terminal typewriter) ==============
-       Plays on every reload. PRODUCK appears, then each line types in
-       character-by-character (steps() on width). The READY_ line ends with
-       a blinking orange cursor block. Around 1.5s the whole screen fades
-       cleanly out, revealing the desktop. -->
-  <div class="boot-screen" id="boot-screen" aria-hidden="true">
-    <div class="boot-screen-inner">
-      <h2 class="boot-wordmark">PRODUCK</h2>
-      <div class="boot-lines">
-        <span class="boot-line">
-          <span class="boot-typed">&gt; memory check ......... </span><span class="boot-ok">OK</span>
-        </span>
-        <span class="boot-line">
-          <span class="boot-typed">&gt; loading duck.exe ..... </span><span class="boot-ok">OK</span>
-        </span>
-        <span class="boot-line">
-          <span class="boot-typed">&gt; READY_</span><span class="boot-cursor" aria-hidden="true"></span>
-        </span>
-      </div>
-    </div>
-  </div>
-
   <!-- ============== DESKTOP BG (cream + dot grid) ============== -->
   <div class="scene" id="scene" aria-hidden="true"></div>
 

@@ -23,74 +23,37 @@ mountDialogDrag();
 mountStickyNote();
 mountFeedbackLog();
 
-/** Click-to-dismiss for the v0.1 sticky note (shows on every reload).
- *  After it drops, a hatching easter egg plays — see spawnHatch() below. */
+/** Click-to-dismiss for the v0.1 sticky note. The sticky drops off the
+ *  bottom, gets removed from the DOM, then ~10s later a fresh copy is
+ *  re-inserted with an .is-respawning class that plays a small drop-in
+ *  animation. The click handler is reattached to each fresh element so
+ *  the cycle can repeat for as long as the user keeps dismissing it. */
+const STICKY_RESPAWN_MS  = 10000;
+const STICKY_DISMISS_MS  = 920;
+const STICKY_TEMPLATE = `<button class="sticky-note is-respawning" id="sticky-note" type="button" aria-label="Dismiss version note"><img src="/sticky-v01.png" alt="v0.1 — hatching" /></button>`;
+
 function mountStickyNote() {
+  attachStickyHandler();
+}
+
+function attachStickyHandler() {
   const note = document.getElementById('sticky-note');
   if (!note) return;
   note.addEventListener('click', () => {
+    // Strip is-respawning so the dismiss animation never has to outcompete
+    // it in the cascade — only one state class on the element at a time.
+    note.classList.remove('is-respawning');
     note.classList.add('is-dismissing');
-    // Remove from DOM after the exit animation completes so it doesn't
-    // capture clicks invisibly. Matches the 0.9s sticky-exit duration.
+    const parent = note.parentElement;
+
     setTimeout(() => {
       note.remove();
-      spawnHatch();
-    }, 920);
+      setTimeout(() => {
+        parent.insertAdjacentHTML('beforeend', STICKY_TEMPLATE);
+        attachStickyHandler();
+      }, STICKY_RESPAWN_MS - STICKY_DISMISS_MS);
+    }, STICKY_DISMISS_MS);
   }, { once: true });
-}
-
-/** Hatching easter egg.
- *  The "v0.1 — hatching" sticky was hiding an actual egg the whole time.
- *  Once the sticky drops, the egg is revealed: drops in, wobbles, cracks,
- *  the shell halves fall away, and a tiny pixel duckling waddles off the
- *  left edge of the viewport. Pure CSS-driven — see .hatch styles in
- *  components.css. */
-function spawnHatch() {
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-
-  const hatch = document.createElement('div');
-  hatch.className = 'hatch';
-  hatch.setAttribute('aria-hidden', 'true');
-  hatch.innerHTML = `
-    <svg class="hatch-egg" viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="32" cy="44" rx="22" ry="30" fill="#FFFDF6" stroke="#0E0E0E" stroke-width="2.5"/>
-      <ellipse cx="24" cy="34" rx="4" ry="6" fill="#FFE5A8" opacity="0.85"/>
-    </svg>
-    <svg class="hatch-crack" viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg">
-      <polyline points="14,40 22,34 18,42 26,38 22,46 30,42 26,50 34,46 30,54"
-                fill="none" stroke="#0E0E0E" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"/>
-    </svg>
-    <svg class="hatch-half hatch-half--left" viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg">
-      <path d="M32,14 A22,30 0 0 0 10,44 L32,44 Z"
-            fill="#FFFDF6" stroke="#0E0E0E" stroke-width="2.5" stroke-linejoin="miter"/>
-    </svg>
-    <svg class="hatch-half hatch-half--right" viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg">
-      <path d="M32,14 A22,30 0 0 1 54,44 L32,44 Z"
-            fill="#FFFDF6" stroke="#0E0E0E" stroke-width="2.5" stroke-linejoin="miter"/>
-    </svg>
-    <svg class="hatch-duckling" viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
-      <!-- body -->
-      <rect x="16" y="40" width="32" height="22" fill="#FFE066"/>
-      <rect x="14" y="44" width="2"  height="14" fill="#FFE066"/>
-      <rect x="48" y="44" width="2"  height="14" fill="#FFE066"/>
-      <!-- head -->
-      <rect x="22" y="24" width="20" height="18" fill="#FFE066"/>
-      <rect x="20" y="28" width="2"  height="12" fill="#FFE066"/>
-      <!-- beak (faces left, toward the waddle direction) -->
-      <rect x="14" y="30" width="8" height="6" fill="#FF7A1A"/>
-      <rect x="14" y="33" width="8" height="2" fill="#E85D00"/>
-      <!-- eye -->
-      <rect x="28" y="28" width="3" height="3" fill="#0E0E0E"/>
-      <!-- feet -->
-      <rect x="20" y="62" width="5" height="3" fill="#FF7A1A"/>
-      <rect x="34" y="62" width="5" height="3" fill="#FF7A1A"/>
-    </svg>
-  `;
-  document.body.appendChild(hatch);
-
-  // All animations are CSS-driven; the duckling's waddle finishes at 3.60s.
-  // Give a small buffer then yank the element out of the DOM.
-  setTimeout(() => hatch.remove(), 3800);
 }
 
 // 1.5. Any "focus the email input" affordance — top-nav links, CTA, desktop icons.

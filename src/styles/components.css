@@ -201,6 +201,145 @@
 /* Reduced-motion sticky-note handled by the RELOAD GLITCH block at the top
    of this file (animation: none !important). */
 
+/* ============== HATCHING EASTER EGG ==============
+   When the user dismisses the "v0.1 — hatching" sticky-note, an actual
+   egg is revealed in the spot it was pinned to. The egg wobbles, cracks
+   open, the shell halves drop away, and a tiny pixel duckling pops out
+   and waddles off the left edge of the viewport.
+
+   Spawned by mountStickyNote() in main.js, ~900ms after the click — i.e.
+   right as the sticky disappears off the bottom of the screen.
+
+   Timeline (relative to .hatch being added to the DOM):
+     0.00s  egg drop-in (60px fall, gentle squash-bounce landing)
+     0.55s  egg wobble (3 cycles)
+     1.55s  hairline crack lines fade in
+     1.85s  shell halves split apart and fall away
+     1.85s  duckling pops up out of the shell with a small bounce
+     2.30s  duckling waddles off the left edge
+     3.80s  cleanup removes .hatch from the DOM */
+
+.hatch {
+  position: fixed;
+  /* Same anchoring as the sticky-note: tucked into the top-left, just
+     below the topnav. Slightly narrower box because the egg + duckling
+     don't need the full sticky footprint. */
+  left: calc(clamp(16px, 3vw, 40px) + 38px);
+  top:  calc(var(--status-h) + var(--topnav-h) + 50px);
+  width: 64px;
+  height: 80px;
+  z-index: 107;
+  pointer-events: none;
+  filter: drop-shadow(3px 4px 0 rgba(15,15,15,0.22));
+}
+
+.hatch svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* Pixel-edge upscaling so the SVG strokes feel crisp against the dot grid */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* The intact egg: drops in from above, then wobbles in place. */
+.hatch-egg {
+  animation:
+    egg-drop   0.55s cubic-bezier(0.34, 1.6, 0.64, 1) both,
+    egg-wobble 0.32s ease-in-out 0.60s 3 both,
+    egg-vanish 0.01s linear 1.85s forwards;
+}
+
+@keyframes egg-drop {
+  0%   { opacity: 0; transform: translateY(-44px) scaleY(1.15); }
+  60%  { opacity: 1; transform: translateY(6px)   scaleY(0.88); }   /* squash on landing */
+  80%  {              transform: translateY(-3px) scaleY(1.04); }
+  100% { opacity: 1; transform: translateY(0)    scaleY(1); }
+}
+
+@keyframes egg-wobble {
+  0%, 100% { transform: rotate(0); }
+  30%      { transform: rotate(-9deg); }
+  70%      { transform: rotate(9deg); }
+}
+
+/* Hide the whole egg once the shell halves take over */
+@keyframes egg-vanish { to { opacity: 0; } }
+
+/* Hairline crack lines drawn over the egg as a separate SVG layer */
+.hatch-crack {
+  opacity: 0;
+  animation: crack-in 0.28s ease-out 1.55s forwards;
+}
+
+@keyframes crack-in { to { opacity: 1; } }
+
+/* Two shell halves: hidden until 1.85s, then split apart with rotation
+   and fall offscreen with gravity-easing. */
+.hatch-half {
+  opacity: 0;
+  transform-origin: 50% 100%;
+}
+.hatch-half--left  { animation: half-left  0.5s cubic-bezier(0.5, 0, 0.75, 0.3) 1.85s forwards; }
+.hatch-half--right { animation: half-right 0.5s cubic-bezier(0.5, 0, 0.75, 0.3) 1.85s forwards; }
+
+@keyframes half-left {
+  0%   { opacity: 1; transform: translate(0, 0)        rotate(0); }
+  30%  { opacity: 1; transform: translate(-10px, -4px) rotate(-12deg); }
+  100% { opacity: 0; transform: translate(-26px, 64px) rotate(-55deg); }
+}
+
+@keyframes half-right {
+  0%   { opacity: 1; transform: translate(0, 0)       rotate(0); }
+  30%  { opacity: 1; transform: translate(10px, -4px) rotate(12deg); }
+  100% { opacity: 0; transform: translate(26px, 64px) rotate(55deg); }
+}
+
+/* Tiny duckling: pops up from the cracked egg, gives a small celebratory
+   bob, then waddles off the left edge with a body bounce. */
+.hatch-duckling {
+  opacity: 0;
+  animation:
+    duckling-pop     0.42s cubic-bezier(0.34, 1.7, 0.64, 1) 1.85s forwards,
+    duckling-waddle  1.30s linear 2.30s forwards;
+}
+
+@keyframes duckling-pop {
+  0%   { opacity: 0; transform: translateY(18px) scale(0.4); }
+  60%  { opacity: 1; transform: translateY(-6px) scale(1.12); }
+  100% { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+/* Waddle: bob up-down + drift left until offscreen. The transforms here
+   override the final state of duckling-pop because they have a later
+   start time on the same element. */
+@keyframes duckling-waddle {
+  0%   { opacity: 1; transform: translateX(0)     translateY(0); }
+  20%  { transform: translateX(-26px) translateY(-3px); }
+  40%  { transform: translateX(-52px) translateY(0); }
+  60%  { transform: translateX(-86px) translateY(-3px); }
+  80%  { transform: translateX(-120px) translateY(0); }
+  100% { opacity: 0; transform: translateX(-160px) translateY(0); }
+}
+
+/* Mobile: shrink the hatch and re-anchor under the smaller sticky position. */
+@media (max-width: 720px) {
+  .hatch {
+    left: 38px;
+    top:  calc(var(--status-h) + var(--topnav-h) + 30px);
+    width: 48px;
+    height: 60px;
+  }
+}
+
+/* Reduced motion: skip the easter egg entirely. */
+@media (prefers-reduced-motion: reduce) {
+  .hatch { display: none !important; }
+}
+
 /* ============== FEEDBACK.LOG TAB ==============
    Pinned to the right side, mirrors the sticky note on the left. Dark
    titlebar with three traffic-light dots and a pixel-font filename;

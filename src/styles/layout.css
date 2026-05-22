@@ -64,23 +64,23 @@ body {
 @media (max-width: 720px) {
   /* Drop the fixed positioning so the hero participates in normal block
      flow — that's what lets the page scroll vertically when the form pushes
-     the content past the viewport height. Top padding clears the topnav
-     (sticky note sits in the top-LEFT corner so it doesn't push the dialog
-     down). Align the dialog to the BOTTOM of the hero so it sits right
-     above the feedback log with only a small breathing gap — the user
-     called out the previous centered layout as having too much dead space
-     between the dialog and feedback.log. */
+     the content past the viewport height. Align to the TOP and let the hero
+     shrink to its content (no min-height: 100dvh) so the dialog sits just
+     below the topnav/sticky-note strip and the feedback.log — now in flow
+     below the hero — appears right under it. Previous bottom-aligned layout
+     left a large empty band between the header and the dialog on mobile. */
   .hero {
     /* relative (not static) so the inherited z-index:10 actually applies —
        otherwise the dialog falls below the footprints (z:1, fixed) in the
        paint order and footprints leak onto the white form. */
     position: relative;
-    min-height: 100dvh;
-    align-items: flex-end;
+    align-items: flex-start;
     padding-left:  var(--pad-x-mobile);
     padding-right: var(--pad-x-mobile);
-    padding-top:    calc(var(--topnav-h) + var(--status-h) + 16px);
-    padding-bottom: 160px;
+    /* Top padding clears the topnav and the sticky-note strip (~96px),
+       leaving a small breathing strip for the duck to waddle through. */
+    padding-top:    calc(var(--topnav-h) + var(--status-h) + 96px);
+    padding-bottom: 16px;
   }
 
   /* Footprints drop BELOW the chrome on mobile so they only appear in the

@@ -21,8 +21,27 @@ export class Duck {
     this.host.innerHTML = DUCK_SVG;
     this.trail = new FootprintTrail(footprintHost, onFootprintCount);
 
+    // Pencil-duck shown while grabbed (drawing mode). Rendered as a scaled
+    // ELEMENT rather than a CSS cursor so it matches the duck's --ui-scale size
+    // on large monitors — CSS cursors are capped (~128px) and can't scale. It's
+    // positioned with the pencil tip on the pointer; duck.css hides the OS
+    // cursor while grabbed so this sprite *is* the cursor.
+    this.pencilEl = document.createElement('img');
+    this.pencilEl.className = 'duck-pencil';
+    this.pencilEl.src = '/duck-pencil-cursor.png';
+    this.pencilEl.alt = '';
+    this.pencilEl.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(this.pencilEl);
+
     this.onState    = onState    || (() => {});
     this.onPosition = onPosition || (() => {});
+
+    // Duck CSS size scales with --ui-scale on large monitors. footOffset +
+    // footprint visuals are tuned in px for the 80px base duck, so track the
+    // duck's rendered width relative to that base and scale prints to match.
+    this._uiFactor = 1;
+    this._recomputeUiFactor();
+    window.addEventListener('resize', () => this._recomputeUiFactor());
 
     // Position and motion
     this.x = window.innerWidth  * 0.20;
@@ -44,8 +63,11 @@ export class Duck {
     this.legBackEl  = null;
     this.bodyEl     = null;
 
-    // Mouse tracking
-    this.mouse = { x: -9999, y: -9999, present: false, safe: false };
+    // Mouse / touch tracking. `touch` is true while a finger is down so the
+    // duck follows it (and never grabs). `_lastTouchAt` lets the click handler
+    // ignore the synthetic click that trails a touch.
+    this.mouse = { x: -9999, y: -9999, present: false, safe: false, touch: false };
+    this._lastTouchAt = 0;
     // Velocity sample ring buffer for shake-to-release detection.
     // Keeps the last ~500ms of {x, y, t} so we can score direction reversals.
     this._mouseSamples = [];
@@ -55,6 +77,9 @@ export class Duck {
       this.mouse.x = e.clientX;
       this.mouse.y = e.clientY;
       this.mouse.present = true;
+      // Keep the pencil tip glued to the pointer while drawing (synchronous
+      // with the move, so it tracks as smoothly as a native cursor would).
+      if (this.state === 'grabbed') this._positionPencil();
       const now = performance.now();
       this._mouseSamples.push({ x: e.clientX, y: e.clientY, t: now });
       // Prune samples older than 500ms — short window so a quick shake registers
@@ -87,6 +112,30 @@ export class Duck {
       if (document.hidden) markAbsent();
     });
 
+    // Touch tracking — on phones/tablets the duck follows the finger as it
+    // moves, then resumes autonomous waddling when the finger lifts. Listeners
+    // are passive (never preventDefault) so the page still scrolls normally and
+    // the duck never blocks touch. It follows but never grabs (see _tickHunt).
+    const trackTouch = (e) => {
+      const t = e.touches && e.touches[0];
+      if (!t) return;
+      this.mouse.x = t.clientX;
+      this.mouse.y = t.clientY;
+      this.mouse.present = true;
+      this.mouse.touch   = true;
+      this.mouse.safe    = this._pointInSafeZone(t.clientX, t.clientY);
+      this._lastTouchAt  = performance.now();
+    };
+    const endTouch = () => {
+      this.mouse.touch  = false;
+      this._lastTouchAt = performance.now();
+      markAbsent();   // present=false → duck returns to waddling on lift
+    };
+    window.addEventListener('touchstart', trackTouch, { passive: true });
+    window.addEventListener('touchmove',  trackTouch, { passive: true });
+    window.addEventListener('touchend',   endTouch,   { passive: true });
+    window.addEventListener('touchcancel', endTouch,  { passive: true });
+
     // Safe zones — duck stops chasing while the cursor is over these so the
     // user can type, click, etc. without the duck getting in the way.
     ['.dialog', '[data-duck-safe]'].forEach((sel) => {
@@ -96,9 +145,12 @@ export class Duck {
       });
     });
 
-    // Click on duck → instant grab (lets user trigger drawing without waiting)
+    // Click on duck → instant grab (lets user trigger drawing without waiting).
+    // Skip the synthetic click that follows a touch — on touch devices the duck
+    // follows the finger and never enters the grab/draw state.
     this.host.addEventListener('click', (e) => {
       e.preventDefault();
+      if (performance.now() - this._lastTouchAt < 700) return;
       if (this.state !== 'grabbed') this._setState('grabbed');
     });
 
@@ -165,6 +217,7 @@ export class Duck {
     // Toggle the global cursor-hide on the html root — duck.css uses this to
     // suppress the OS pointer everywhere while the duck IS the cursor.
     document.documentElement.classList.toggle('duck-grabbed', s === 'grabbed');
+    if (s === 'grabbed') this._positionPencil();   // appear at the pointer immediately
     // Drive the single walk-cycle video off the new state:
     //   - waddling: 1.0x normal playback (matches the natural waddle speed)
     //   - hunting:  2.4x — duck is sprinting after the cursor
@@ -183,7 +236,11 @@ export class Duck {
   }
 
   _pickWaypoint() {
-    const { edgeMargin, avoidZones, avoidPadding } = DUCK;
+    const { avoidZones, avoidPadding } = DUCK;
+    // Inset the roaming area by the duck's scaled half-size so a larger duck on
+    // big monitors keeps its whole body (esp. its feet) on screen at the
+    // lowest/edge-most waypoints.
+    const edgeMargin = DUCK.edgeMargin * this._uiFactor;
     // On mobile the dialog spans nearly the full viewport width — if we
     // honored the avoid list the duck would have no viable random waypoints
     // and would stall against an edge or oscillate at a corner. Treat the
@@ -310,8 +367,17 @@ export class Duck {
     // Skip entirely on mobile — touch-as-mouse events can fire spurious
     // "mousemove"s and the duck is purely decorative on small screens. We
     // never want it sprinting at a tap.
+    const canChase = this.mouse.present && !this.mouse.safe && now > this._huntCooldownUntil;
+    // Touch: follow the finger from anywhere on screen (the user is pointing
+    // deliberately, so proximity doesn't apply). Mouse: only chase once the
+    // cursor wanders within proximityRadius. A plain mobile tap with no finger
+    // held down never chases — the duck just keeps waddling.
+    if (canChase && this.mouse.touch) {
+      this._setState('hunting');
+      return;
+    }
     const isMobile = window.innerWidth <= 720;
-    if (!isMobile && this.mouse.present && !this.mouse.safe && now > this._huntCooldownUntil) {
+    if (canChase && !isMobile) {
       const dx = this.mouse.x - this.x;
       const dy = this.mouse.y - this.y;
       const d  = Math.hypot(dx, dy);
@@ -346,14 +412,26 @@ export class Duck {
   }
 
   _tickHunt(dt) {
-    // If mouse left, or entered a safe zone → return to waddling
+    // If pointer left, or entered a safe zone → return to waddling
     if (!this.mouse.present || this.mouse.safe) { this._setState('waddling'); return; }
 
     const dx = this.mouse.x - this.x;
     const dy = this.mouse.y - this.y;
     const d  = Math.hypot(dx, dy);
 
-    // Grab when close enough
+    // Touch: follow only — never grab. Grabbing hides the sprite + activates
+    // the (touch-disabled) whiteboard, so on a finger we just chase and rest a
+    // short gap away so the duck doesn't jitter on top of the fingertip.
+    if (this.mouse.touch) {
+      if (d < DUCK.grabRadius) { this.vx = this.vy = 0; return; }
+      const speed = DUCK.huntSpeed;
+      this.vx = (dx / d) * speed;
+      this.vy = (dy / d) * speed;
+      this._step(dt);
+      return;
+    }
+
+    // Mouse: grab when close enough
     if (d < DUCK.grabRadius) {
       this._setState('grabbed');
       return;
@@ -470,21 +548,56 @@ export class Duck {
    */
   _maybeDropFootprints() {
     const { plantPhaseBack, plantPhaseFront, footOffset } = DUCK;
+    const f = this._uiFactor;   // scale offsets + print size with the duck
     const angleDeg = Math.atan2(this.vy, this.vx) * 180 / Math.PI + 90;
     if (this._phaseCrossed(plantPhaseFront)) {
       this.trail.add(
-        this.x + footOffset.front.x * this.facing,
-        this.y + footOffset.front.y,
-        angleDeg
+        this.x + footOffset.front.x * this.facing * f,
+        this.y + footOffset.front.y * f,
+        angleDeg,
+        f
       );
     }
     if (this._phaseCrossed(plantPhaseBack)) {
       this.trail.add(
-        this.x + footOffset.back.x * this.facing,
-        this.y + footOffset.back.y,
-        angleDeg
+        this.x + footOffset.back.x * this.facing * f,
+        this.y + footOffset.back.y * f,
+        angleDeg,
+        f
       );
     }
+  }
+
+  /** Recompute the duck's size factor (rendered width ÷ 80px base) so footprint
+   *  offsets + visuals stay matched to the duck across --ui-scale breakpoints
+   *  and resizes. Falls back to 1 before first layout. */
+  _recomputeUiFactor() {
+    this._uiFactor = (this.host.offsetWidth || 80) / 80;
+  }
+
+  /** Park the pencil-duck so its tip (6,56 in the 67×61 art, scaled by the same
+   *  --ui-scale factor as the duck) sits exactly on the pointer. */
+  _positionPencil() {
+    if (!this.pencilEl) return;
+    const f = this._uiFactor;
+    this.pencilEl.style.left = (this.mouse.x - 6 * f) + 'px';
+    this.pencilEl.style.top  = (this.mouse.y - 56 * f) + 'px';
+  }
+
+  /** True if (x, y) sits over a safe zone (the dialog / opted-out elements).
+   *  Used for touch, where mouseenter/leave don't fire — keeps the duck from
+   *  chasing onto the email form while the user is typing. */
+  _pointInSafeZone(x, y) {
+    for (const sel of ['.dialog', '[data-duck-safe]']) {
+      for (const el of document.querySelectorAll(sel)) {
+        const r = el.getBoundingClientRect();
+        if (r.width && r.height &&
+            x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /** Did walkPhase pass `threshold` between previous and current frame? */

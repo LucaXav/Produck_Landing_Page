@@ -48,6 +48,11 @@
   --pad-x:        clamp(20px, 4vw, 56px);
   --pad-x-mobile: 20px;
   --topnav-h:     58px;
+  /* Global desktop UI scale — set per-breakpoint in layout.css so the chrome
+     panels (via `zoom`) AND the topnav (via the calc()s below) grow together
+     as one unit on large monitors. Base 1 is a neutral fallback; the real
+     desktop ladder starts at 0.9 (the ~1280px laptop baseline) at ≥721px. */
+  --ui-scale:     1;
   --status-h:     0px;        /* Status pip was removed; var kept at 0 so the
                                  existing top-offset math in layout/components
                                  still resolves without rewriting every rule. */

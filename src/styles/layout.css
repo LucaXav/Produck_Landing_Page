@@ -9,18 +9,38 @@ body {
   position: relative;
 }
 
-/* Desktop "90% zoom" feel — applied per-element instead of `body { zoom }`
+/* Desktop UI scaling — applied per-element instead of `body { zoom }`
    because body-level zoom de-syncs every JS-driven pixel coord (whiteboard
    canvas, duck position, footprints), making the pen tool draw at
-   cursor × 0.9 instead of at the cursor and at the duck's pen tip. Scaling
+   cursor × scale instead of at the cursor and at the duck's pen tip. Scaling
    only the static chrome panels — dialog, sticky-note, feedback-log — keeps
-   the duck/whiteboard interactions exact while still shrinking the visible
-   UI by 10%. Topnav size is reduced separately via tokens + font tweaks
-   (it's full-width so element-zoom would leave a gap on the right). */
+   the duck/whiteboard interactions exact. The topnav scales in lockstep via
+   the --ui-scale calc()s in components.css (it's full-width, so element-zoom
+   would leave a gap on the right — its size is driven off the token instead).
+
+   The 0.9 baseline was tuned on a ~1280px-wide laptop, where the dialog fills
+   ~40% of the viewport. On larger monitors those same fixed px collapse to a
+   tiny fraction of the screen (the dialog drops to ~20% at 2560px) and the UI
+   looks lost in cream. So step --ui-scale up with the viewport to hold the
+   laptop's proportions at any width (scale ≈ viewport / 1400). Laptops ≤1499px
+   stay at the original 0.9 — only genuinely large desktop monitors scale up. */
+@media (min-width: 721px)  { :root { --ui-scale: 0.9;  } }
+@media (min-width: 1500px) { :root { --ui-scale: 1.05; } }
+@media (min-width: 1700px) { :root { --ui-scale: 1.2;  } }
+@media (min-width: 1900px) { :root { --ui-scale: 1.35; } }
+@media (min-width: 2100px) { :root { --ui-scale: 1.5;  } }
+@media (min-width: 2300px) { :root { --ui-scale: 1.65; } }
+@media (min-width: 2500px) { :root { --ui-scale: 1.8;  } }
+
 @media (min-width: 721px) {
   #dialog,
   #sticky-note,
-  #feedback-log { zoom: 0.9; }
+  #feedback-log { zoom: var(--ui-scale); }
+
+  /* Topnav height tracks the same scale (58px at the 0.9 baseline). Driving
+     it off the token keeps .hero padding, the draw-hint and the panel offsets
+     — all of which reference --topnav-h — aligned as the bar grows. */
+  :root { --topnav-h: calc(58px * var(--ui-scale) / 0.9); }
 }
 
 /* Cream desktop background — dense retro halftone matching the reference.
@@ -72,6 +92,19 @@ body {
   inset: 0;
   z-index: 110;
   pointer-events: none;
+}
+
+/* ============== TABLET / iPad (721–1199px) ==============
+   The feedback.log can't sit beside the centered dialog here without squeezing
+   it, so it stacks BELOW (see components.css). For that the hero must be in
+   normal flow (not the fixed, viewport-centered desktop hero) so the log — a
+   sibling after it — follows directly underneath. Top-aligned below the topnav;
+   the page scrolls if the stack is taller than the viewport. */
+@media (min-width: 721px) and (max-width: 1199px) {
+  .hero {
+    position: relative;
+    padding: calc(var(--topnav-h) + var(--status-h) + 64px) var(--pad-x) 8px;
+  }
 }
 
 /* ============== MOBILE ============== */

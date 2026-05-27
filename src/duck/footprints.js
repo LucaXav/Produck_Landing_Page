@@ -15,13 +15,14 @@ export class FootprintTrail {
     this.stepCount = 0; // total ever
   }
 
-  add(x, y, angleDeg) {
+  add(x, y, angleDeg, sizeScale = 1) {
     const el = document.createElement('div');
     el.className = 'footprint';
     // Pick a random variant + small size/rotation jitter so the trail looks
-    // like organic dirty steps, not identical clones.
+    // like organic dirty steps, not identical clones. sizeScale tracks the
+    // duck's --ui-scale so prints grow with the duck on large monitors.
     const variant = FOOTPRINT_VARIANTS[Math.floor(Math.random() * FOOTPRINT_VARIANTS.length)];
-    const jitterScale = 0.9 + Math.random() * 0.25;   // 0.9–1.15×
+    const jitterScale = (0.9 + Math.random() * 0.25) * sizeScale;   // 0.9–1.15× × scale
     const jitterAngle = (Math.random() - 0.5) * 14;   // ±7°
     el.innerHTML = variant;
     el.style.left = `${x}px`;

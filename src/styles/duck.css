@@ -3,9 +3,13 @@
   position: fixed;
   top: 0; left: 0;
   /* Video sprite is 1200×1500 (portrait, aspect 0.80). Container matches the
-     new wider crop so the entire duck — beak to tail-tip — stays in frame. */
-  width: 80px;
-  height: 100px;
+     new wider crop so the entire duck — beak to tail-tip — stays in frame.
+     Size tracks the same --ui-scale as the chrome (80×100 at the 0.9 laptop
+     baseline) so the duck holds its proportion relative to the dialog/panels
+     on large monitors. duck.js scales the footprint offset + size to match via
+     the duck's rendered width, so prints still land at the feet. */
+  width: calc(80px * var(--ui-scale) / 0.9);
+  height: calc(100px * var(--ui-scale) / 0.9);
   /* z-index 120 → ABOVE the topnav (z:100) and whiteboard (z:115), so the
      duck can dock over the header bar and never gets covered. Status pip
      (z:130) is the only thing kept on top. */
@@ -92,16 +96,33 @@
 }
 .duck.state-grabbed .duck-video { display: none; }
 
-/* Across the entire page while grabbed, swap the OS cursor for the
-   pixel-art duck-with-pencil sprite. Hotspot "6 56" lands on the wooden
-   pencil tip in the 67x61 PNG, so the click/draw point is exactly the
-   pencil's writing end — users see strokes emerge from the pencil. JS
-   toggles `html.duck-grabbed` on the root in duck.js. */
+/* Across the entire page while grabbed, hide the OS cursor — the scaled
+   .duck-pencil element below stands in for it so the "caught" duck matches the
+   roaming duck's size on large monitors (a CSS-url cursor caps at ~128px and
+   can't scale with --ui-scale). JS toggles `html.duck-grabbed` on the root. */
 html.duck-grabbed,
 html.duck-grabbed body,
 html.duck-grabbed * {
-  cursor: url('/duck-pencil-cursor.png') 6 56, crosshair !important;
+  cursor: none !important;
 }
+
+/* Pencil-duck "cursor" — positioned by duck.js (_positionPencil) at the pointer
+   while grabbed, with the pencil tip (6,56 in the 67×61 source art) on the
+   click/draw point so users still see strokes emerge from the pencil. Sized off
+   the same --ui-scale as the duck so the two match at every viewport. */
+.duck-pencil {
+  position: fixed;
+  left: 0; top: 0;
+  width:  calc(67px * var(--ui-scale) / 0.9);
+  height: calc(61px * var(--ui-scale) / 0.9);
+  z-index: 130;          /* above the duck (120) + whiteboard (115) */
+  pointer-events: none;
+  display: none;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+html.duck-grabbed .duck-pencil { display: block; }
 
 /* ============== FOOTPRINTS ============== */
 .footprint {

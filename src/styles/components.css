@@ -123,7 +123,10 @@
 .sticky-note {
   position: fixed;
   left: clamp(16px, 3vw, 40px);
-  top: calc(var(--status-h) + var(--topnav-h) + 24px);
+  /* Divide the offset by --ui-scale to cancel this panel's own `zoom`, so the
+     gap below the topnav stays a constant ~16px instead of ballooning as the
+     scale (and --topnav-h) grow on large monitors. */
+  top: calc((var(--topnav-h) + 16px) / var(--ui-scale) + var(--status-h));
   width: 138px;
   height: 150px;
   z-index: 108;
@@ -230,7 +233,10 @@
 .feedback-log {
   position: fixed;
   right: clamp(16px, 3vw, 40px);
-  top: calc(var(--status-h) + var(--topnav-h) + 24px);
+  /* Divide the offset by --ui-scale to cancel this panel's own `zoom`, so the
+     gap below the topnav stays a constant ~16px instead of ballooning as the
+     scale (and --topnav-h) grow on large monitors. */
+  top: calc((var(--topnav-h) + 16px) / var(--ui-scale) + var(--status-h));
   width: 308px;
   z-index: 108;
   background: transparent;
@@ -422,9 +428,21 @@
   100% { transform: scaleY(0.012) scaleX(0);        filter: brightness(0); opacity: 0; }
 }
 
-@media (max-width: 1024px) {
-  /* Tablet: not enough room beside the centered hero — hide entirely. */
-  .feedback-log { display: none; }
+@media (min-width: 721px) and (max-width: 1199px) {
+  /* Tablet / small desktop (incl. all iPads except 12.9" landscape): no room
+     for the log BESIDE the centered dialog without squeezing it, so stack it
+     BELOW the dialog in normal flow — like the phone layout, but centered with
+     a capped width instead of full-bleed. The .hero is put in flow for this
+     range in layout.css so the log follows directly under it. */
+  .feedback-log {
+    display: block;
+    position: relative;
+    top: auto; bottom: auto; left: auto; right: auto;
+    width: min(340px, calc(100vw - 96px));
+    margin: 26px auto 32px;
+    transform-origin: 50% 0%;
+  }
+  .feedback-log-body { height: 132px; }
 }
 @media (max-width: 720px) {
   /* Mobile pulls the feedback.log into normal document flow so it sits
@@ -471,7 +489,7 @@
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: calc(22px * var(--ui-scale) / 0.9);
   padding: 0 var(--pad-x);
   background-color: var(--paper-deep);
   background-image:
@@ -493,7 +511,7 @@
   text-decoration: none;
 }
 .topnav-brand-icon {
-  height: 27px;
+  height: calc(27px * var(--ui-scale) / 0.9);
   width: auto;
   display: block;
   image-rendering: auto;
@@ -504,7 +522,7 @@
 .topnav-brand-name {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 25px;
+  font-size: calc(25px * var(--ui-scale) / 0.9);
   line-height: 1;
   letter-spacing: 0.005em;
   color: var(--ink);
@@ -520,10 +538,10 @@
   color: #FFFDF6;
   border: var(--bw) solid var(--ink);
   border-radius: 999px;
-  padding: 8px 18px;
+  padding: calc(8px * var(--ui-scale) / 0.9) calc(18px * var(--ui-scale) / 0.9);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 13.5px;
+  font-size: calc(13.5px * var(--ui-scale) / 0.9);
   letter-spacing: -0.005em;
   cursor: pointer;
   transition: background 0.15s, transform 0.08s, box-shadow 0.15s;
@@ -578,6 +596,18 @@
     0 9px 0 var(--ink),
     0 30px 44px -12px rgba(15,15,15,0.36),
     0 8px 16px -4px rgba(15,15,15,0.22);
+}
+
+/* Tablet / small desktop (721–1199px): the feedback.log is hidden in this
+   range, so the desktop "reserve 360px each side" guard — calc(100vw - 720px)
+   — has nothing to clear on the right and just over-shrinks the dialog (at
+   768px it collapsed to a ~48px sliver, wrapping the headline one letter per
+   line). With no right panel present, give the centered dialog a comfortable
+   width. The sticky-note sits top-left while the dialog is vertically centered,
+   so they don't overlap. At ≥1200px the feedback.log returns and the base rule
+   (with the 720px guard) takes over, keeping the dialog clear of both panels. */
+@media (min-width: 721px) and (max-width: 1199px) {
+  .dialog { width: min(clamp(420px, 58vw, 520px), calc(100vw - 48px)); }
 }
 
 .dialog-titlebar {
